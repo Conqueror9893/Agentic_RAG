@@ -35,3 +35,19 @@ CHROMA_COLLECTION_NAME = "rag_agentic_system"
 # you'll need to provide the API key for that service.
 # For example, using Tavily Search:
 # TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+
+# ---------------------
+# JIRA Configuration
+# ---------------------
+# If you want to use the JIRA integration, you'll need to provide your JIRA credentials.
+# Make sure to set these in your .env file.
+#
+# .env file example:
+# JIRA_URL="https://your-domain.atlassian.net"
+# JIRA_USERNAME="your-email@example.com"
+# JIRA_API_TOKEN="your-api-token"
+#
+JIRA_URL = os.getenv("JIRA_URL")
+JIRA_USERNAME = os.getenv("JIRA_USERNAME")
+JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")

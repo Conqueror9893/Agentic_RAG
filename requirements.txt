@@ -12,3 +12,4 @@ uvicorn
 pytest
 langchain-community
 sentence-transformers
+atlassian-python-api

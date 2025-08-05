@@ -5,6 +5,8 @@ from src.agents.rephraser import Rephraser
 from src.agents.evaluator import Evaluator
 from src.tools.file_loader import load_documents
 from src.tools.vector_store import get_vector_store, add_documents_to_store
+from src.tools.jira_loader import JiraLoader
+from config import JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN
 import os
 
 def setup_and_run(query: str):
@@ -25,8 +27,20 @@ def setup_and_run(query: str):
         add_documents_to_store(vector_store, documents)
 
     print("\n--- 3. AGENT AND ORCHESTRATOR INITIALIZATION ---")
+
+    # Initialize JiraLoader if credentials are available
+    jira_loader = None
+    if all([JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN]):
+        try:
+            jira_loader = JiraLoader()
+            print("JiraLoader initialized successfully.")
+        except ValueError as e:
+            print(f"Could not initialize JiraLoader: {e}")
+    else:
+        print("Jira credentials not found in .env file. Skipping JiraLoader initialization.")
+
     rephraser_agent = Rephraser()
-    retriever_agent = Retriever(vector_store=vector_store)
+    retriever_agent = Retriever(vector_store=vector_store, jira_loader=jira_loader)
     generator_agent = Generator()
     evaluator_agent = Evaluator()
 
@@ -62,9 +76,13 @@ if __name__ == "__main__":
             f.write("The capital of France is Paris. The Eiffel Tower is a famous landmark in Paris. The currency of Japan is the Yen.")
 
     # Get user input
-    user_query = input("Please enter your query: ")
+    # user_query = input("Please enter your query: ")
 
-    if user_query and user_query.strip():
-        setup_and_run(user_query)
-    else:
-        print("No query entered. Exiting.")
+    # --- Test a regular query ---
+    # setup_and_run("What is the capital of France?")
+
+    # --- Test a JIRA query ---
+    # Note: To test this, you need to have a .env file with your JIRA credentials
+    # and replace the placeholder values in the query below.
+    jira_query = "what tickets are being worked upon by test@example.com in JIRA"
+    setup_and_run(jira_query)
