@@ -61,16 +61,16 @@ def setup_and_run(query: str):
         print("\nCould not retrieve a final answer.")
         print("Final state:", result_state)
 
-if __name__ == "__main__":
-    # Example query. Replace with your own.
-    # This query will trigger the JiraAdapter if it's configured.
-    user_query = "what tickets are being worked upon by test@example.com in JIRA"
+# if __name__ == "__main__":
+#     # Example query. Replace with your own.
+#     # This query will trigger the JiraAdapter if it's configured.
+#     user_query = "what tickets are being worked upon by test@example.com in JIRA"
 
-    # You can also ask non-Jira questions if you have other data sources,
-    # but this example is focused on the Jira integration.
-    # user_query = "What is LangGraph?"
+#     # You can also ask non-Jira questions if you have other data sources,
+#     # but this example is focused on the Jira integration.
+#     # user_query = "What is LangGraph?"
 
-    if not user_query:
-        print("Please set a user_query in main.py")
-    else:
-        setup_and_run(user_query)
+#     if not user_query:
+#         print("Please set a user_query in main.py")
+#     else:
+#         setup_and_run(user_query)
