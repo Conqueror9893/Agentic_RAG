@@ -168,25 +168,17 @@ class JiraAdapter:
     def get_tickets_updated_by_others(self, user_email: str) -> str:
         """
         Retrieves tickets assigned to a user that were last updated by someone else.
-        This is a conceptual method. A direct JQL for this is not available.
-        We can fetch recent tickets and check the author of the last comment.
-        This implementation is a simplified version.
         """
         jql_query = f'project = "{self.project_key}" AND assignee = "{user_email}" ORDER BY updated DESC'
         try:
-            issues = self.jira.jql(jql_query, fields="summary,comment", expand="changelog")
+            issues = self.jira.jql(jql_query, fields="summary")
             updated_by_others = []
             for issue in issues.get('issues', []):
                 comments = self.get_issue_comments(issue['key'])
                 if comments:
-                    # comments is a list of strings, so we need to parse it
-                    # This is getting complicated. Let's simplify the logic.
-                    # We'll just check if there are any comments.
-                    if len(comments) > 0:
-                        # This is not ideal, but for the purpose of this task,
-                        # we will assume that if there are comments, they are from others.
-                        # A more robust solution would be to parse the author from the comment string.
-                        updated_by_others.append(f"- {issue['key']}: {issue['fields']['summary']}")
+                    last_comment = comments[-1]
+                    if last_comment['author']['emailAddress'] != user_email:
+                        updated_by_others.append(f"- {issue['key']}: {issue['fields']['summary']} (Last comment by: {last_comment['author']['displayName']})")
 
             if not updated_by_others:
                 return f"No tickets found for {user_email} that were recently updated by others."
@@ -232,15 +224,15 @@ class JiraAdapter:
         except Exception as e:
             return f"Error fetching stagnant tickets: {e}"
 
-    def get_issue_comments(self, issue_key: str) -> list[str]:
+    def get_issue_comments(self, issue_key: str) -> list[Dict[str, Any]]:
         """
         Retrieves comments for a specific issue.
         """
         try:
             comments = self.jira.get_issue_comments(issue_key)
-            return [f"{comment['author']['displayName']}: {comment['body']}" for comment in comments['comments']]
+            return comments['comments']
         except Exception as e:
-            return [f"Error fetching comments for issue '{issue_key}': {e}"]
+            return []
 
     def get_issue_worklogs(self, issue_key: str) -> list[str]:
         """
