@@ -41,7 +41,7 @@ class TestIntents(unittest.TestCase):
 
         # Act
         result_state = self.orchestrator.run(query)
-        final_answer = result_state.get('evaluator', {}).get('final_answer')
+        final_answer = result_state.get('final_answer')
 
         # Assert
         self.assertIn("5 tickets", final_answer)
@@ -55,7 +55,7 @@ class TestIntents(unittest.TestCase):
 
         # Act
         result_state = self.orchestrator.run(query)
-        final_answer = result_state.get('evaluator', {}).get('final_answer')
+        final_answer = result_state.get('final_answer')
 
         # Assert
         self.assertIn("In Progress", final_answer)
@@ -69,7 +69,7 @@ class TestIntents(unittest.TestCase):
 
         # Act
         result_state = self.orchestrator.run(query)
-        final_answer = result_state.get('evaluator', {}).get('final_answer')
+        final_answer = result_state.get('final_answer')
 
         # Assert
         self.assertIn("10 tickets", final_answer)
@@ -83,7 +83,7 @@ class TestIntents(unittest.TestCase):
 
         # Act
         result_state = self.orchestrator.run(query)
-        final_answer = result_state.get('evaluator', {}).get('final_answer')
+        final_answer = result_state.get('final_answer')
 
         # Assert
         self.assertIn("PSA-1", final_answer)
@@ -97,7 +97,7 @@ class TestIntents(unittest.TestCase):
 
         # Act
         result_state = self.orchestrator.run(query)
-        final_answer = result_state.get('evaluator', {}).get('final_answer')
+        final_answer = result_state.get('final_answer')
 
         # Assert
         self.assertIn("PSA-2", final_answer)
@@ -111,7 +111,7 @@ class TestIntents(unittest.TestCase):
 
         # Act
         result_state = self.orchestrator.run(query)
-        final_answer = result_state.get('evaluator', {}).get('final_answer')
+        final_answer = result_state.get('final_answer')
 
         # Assert
         self.assertIn("PSA-3", final_answer)
@@ -125,7 +125,7 @@ class TestIntents(unittest.TestCase):
 
         # Act
         result_state = self.orchestrator.run(query)
-        final_answer = result_state.get('evaluator', {}).get('final_answer')
+        final_answer = result_state.get('final_answer')
 
         # Assert
         self.assertIn("PSA-4", final_answer)
