@@ -6,6 +6,7 @@ class AgentState(TypedDict):
     This state is passed between the nodes of our LangGraph.
     """
     original_query: str
+    intent: str
     rephrased_queries: Optional[List[str]]
     retrieved_documents: Optional[List[str]]
     generated_answer: Optional[str]
