@@ -86,7 +86,7 @@ class TestIntents(unittest.TestCase):
         final_answer = result_state.get('evaluator', {}).get('final_answer')
 
         # Assert
-        self.assertIn("Stale ticket", final_answer)
+        self.assertIn("PSA-1", final_answer)
 
     def test_get_tickets_with_approaching_deadlines_intent(self):
         """Test the GET_TICKETS_WITH_APPROACHING_DEADLINES intent."""
@@ -100,7 +100,7 @@ class TestIntents(unittest.TestCase):
         final_answer = result_state.get('evaluator', {}).get('final_answer')
 
         # Assert
-        self.assertIn("Urgent ticket", final_answer)
+        self.assertIn("PSA-2", final_answer)
 
     def test_get_tickets_stagnant_in_status_intent(self):
         """Test the GET_TICKETS_STAGNANT_IN_STATUS intent."""
@@ -114,7 +114,7 @@ class TestIntents(unittest.TestCase):
         final_answer = result_state.get('evaluator', {}).get('final_answer')
 
         # Assert
-        self.assertIn("Stuck ticket", final_answer)
+        self.assertIn("PSA-3", final_answer)
 
     def test_get_tickets_updated_by_others_intent(self):
         """Test the GET_TICKETS_UPDATED_BY_OTHERS intent."""
@@ -128,7 +128,7 @@ class TestIntents(unittest.TestCase):
         final_answer = result_state.get('evaluator', {}).get('final_answer')
 
         # Assert
-        self.assertIn("Another user commented", final_answer)
+        self.assertIn("PSA-4", final_answer)
 
 if __name__ == '__main__':
     unittest.main()
