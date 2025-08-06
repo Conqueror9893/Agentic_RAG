@@ -82,13 +82,19 @@ class JiraAdapter:
     def _enrich_issue(self, issue_key: str) -> Dict[str, Any]:
         issue = self.jira.issue(issue_key)
 
+        assignee_field = issue["fields"].get("assignee")
+        assignee = assignee_field.get("emailAddress") if assignee_field else "Unassigned"
+
+        reporter_field = issue["fields"].get("reporter")
+        reporter = reporter_field.get("emailAddress") if reporter_field else "No reporter"
+
         enriched = {
             "key": issue["key"],
             "summary": issue["fields"].get("summary"),
             "description": issue["fields"].get("description"),
             "status": issue["fields"].get("status", {}).get("name"),
-            "assignee": issue["fields"].get("assignee", {}).get("emailAddress"),
-            "reporter": issue["fields"].get("reporter", {}).get("emailAddress"),
+            "assignee": assignee,
+            "reporter": reporter,
             "created": issue["fields"].get("created"),
             "updated": issue["fields"].get("updated"),
             "duedate": issue["fields"].get("duedate"),
