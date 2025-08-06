@@ -184,15 +184,16 @@ class Retriever:
     def __init__(self, vector_store, jira_adapter: JiraAdapter = None):
         self.vector_store = vector_store
         self.jira_adapter = jira_adapter
-        self._initialized = False
         if self.jira_adapter:
-            self._populate_jira_documents()
-            
+            # Check if the vector store is already populated
+            if self.vector_store._collection.count() == 0:
+                self._populate_jira_documents()
+            else:
+                print("Vector store is already populated with Jira documents.")
+
     def _populate_jira_documents(self):
-        if self._initialized:
-            return
         print("Fetching Jira issues and populating vector store...")
-        raw_issues = self.jira_adapter.fetch_all_issues_with_details()
+        raw_issues = self.jira_adapter.get_issues_in_project()
         documents = [Document(
             page_content=self._compose_issue_text(issue),
             metadata={
@@ -205,12 +206,10 @@ class Retriever:
                 "priority": issue["priority"],
                 "issuetype": issue["issuetype"],
                 "labels": ", ".join(issue.get("labels", [])),
-                
                 "subtasks": "; ".join(
                     f"{sub['key']} - {sub['summary']} ({sub['status']})"
                     for sub in issue.get("subtasks", [])
                 ),
-
             }) for issue in raw_issues]
 
         if documents:
@@ -218,28 +217,22 @@ class Retriever:
             print(f"Added {len(documents)} Jira documents to vector store.")
         else:
             print("No documents fetched from Jira.")
-        self._initialized = True
 
-    def retrieve(self, intent: str, queries: list[str], k: int = 2) -> list[str]:
-        print(f"Retrieving documents for intent: {intent} and queries: {queries}")
+    def retrieve(self, queries: list[str], k: int = 2) -> list[Document]:
+        """
+        Retrieves documents for the given queries from the vector store.
+        """
+        print(f"Retrieving documents for queries: {queries}")
         
         retrieved_docs = []
-
         for query in queries:
-            # Optional: route based on intent
-            if intent.lower() == "jira":
-                # Perform JIRA-related similarity search
-                results = self.vector_store.similarity_search(query, k=k)
-            else:
-                # Placeholder for future intent types
-                print(f"[WARN] Unknown intent '{intent}', falling back to default vector store.")
-                results = self.vector_store.similarity_search(query, k=k)
+            results = self.vector_store.similarity_search(query, k=k)
+            retrieved_docs.extend(results)
 
-            retrieved_docs.extend([doc.page_content for doc in results])
-
-        unique_docs = list(set(retrieved_docs))
+        # Remove duplicates
+        unique_docs = {doc.page_content: doc for doc in retrieved_docs}.values()
         print(f"Retrieved {len(unique_docs)} unique documents.")
-        return unique_docs
+        return list(unique_docs)
 
     
     def _compose_issue_text(self, issue: dict) -> str:
