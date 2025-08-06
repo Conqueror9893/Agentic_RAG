@@ -226,3 +226,34 @@ class JiraAdapter:
             return f"Stagnant tickets (not changed status in {days} days):\n" + "\n".join(ticket_list)
         except Exception as e:
             return f"Error fetching stagnant tickets: {e}"
+
+    def get_issue_comments(self, issue_key: str) -> list[str]:
+        """
+        Retrieves comments for a specific issue.
+        """
+        try:
+            comments = self.jira.issue_comments(issue_key)
+            return [f"{comment['author']['displayName']}: {comment['body']}" for comment in comments['comments']]
+        except Exception as e:
+            return [f"Error fetching comments for issue '{issue_key}': {e}"]
+
+    def get_issue_worklogs(self, issue_key: str) -> list[str]:
+        """
+        Retrieves worklogs for a specific issue.
+        """
+        try:
+            worklogs = self.jira.issue_worklogs(issue_key)
+            return [f"{worklog['author']['displayName']} logged {worklog['timeSpent']} on {worklog['started']}" for worklog in worklogs['worklogs']]
+        except Exception as e:
+            return [f"Error fetching worklogs for issue '{issue_key}': {e}"]
+
+    def get_issue_attachments(self, issue_key: str) -> list[str]:
+        """
+        Retrieves attachments for a specific issue.
+        """
+        try:
+            issue = self.jira.issue(issue_key, fields="attachment")
+            attachments = issue['fields']['attachment']
+            return [f"{attachment['filename']} ({attachment['size']} bytes)" for attachment in attachments]
+        except Exception as e:
+            return [f"Error fetching attachments for issue '{issue_key}': {e}"]

@@ -189,28 +189,36 @@ class Retriever:
             if self.vector_store._collection.count() == 0:
                 self._populate_jira_documents()
             else:
-                print("Vector store is already populated with Jira documents.")
+                print(f"Vector store is already populated with {self.vector_store._collection.count()} Jira documents.")
 
     def _populate_jira_documents(self):
         print("Fetching Jira issues and populating vector store...")
         raw_issues = self.jira_adapter.get_issues_in_project()
-        documents = [Document(
-            page_content=self._compose_issue_text(issue),
-            metadata={
-                "issue_key": issue["key"],
-                "assignee": issue["assignee"],
-                "reporter": issue["reporter"],
-                "status": issue["status"],
-                "created": issue["created"],
-                "updated": issue["updated"],
-                "priority": issue["priority"],
-                "issuetype": issue["issuetype"],
-                "labels": ", ".join(issue.get("labels", [])),
-                "subtasks": "; ".join(
-                    f"{sub['key']} - {sub['summary']} ({sub['status']})"
-                    for sub in issue.get("subtasks", [])
-                ),
-            }) for issue in raw_issues]
+
+        documents = []
+        for issue in raw_issues:
+            comments = self.jira_adapter.get_issue_comments(issue['key'])
+            worklogs = self.jira_adapter.get_issue_worklogs(issue['key'])
+            attachments = self.jira_adapter.get_issue_attachments(issue['key'])
+
+            documents.append(Document(
+                page_content=self._compose_issue_text(issue, comments, worklogs, attachments),
+                metadata={
+                    "issue_key": issue["key"],
+                    "assignee": issue["assignee"],
+                    "reporter": issue["reporter"],
+                    "status": issue["status"],
+                    "created": issue["created"],
+                    "updated": issue["updated"],
+                    "priority": issue["priority"],
+                    "issuetype": issue["issuetype"],
+                    "labels": ", ".join(issue.get("labels", [])),
+                    "subtasks": "; ".join(
+                        f"{sub['key']} - {sub['summary']} ({sub['status']})"
+                        for sub in issue.get("subtasks", [])
+                    ),
+                })
+            )
 
         if documents:
             add_documents_to_store(self.vector_store, documents)
@@ -218,7 +226,7 @@ class Retriever:
         else:
             print("No documents fetched from Jira.")
 
-    def retrieve(self, queries: list[str], k: int = 2) -> list[Document]:
+    def retrieve(self, queries: list[str], k: int = 5) -> list[Document]:
         """
         Retrieves documents for the given queries from the vector store.
         """
@@ -235,7 +243,7 @@ class Retriever:
         return list(unique_docs)
 
     
-    def _compose_issue_text(self, issue: dict) -> str:
+    def _compose_issue_text(self, issue: dict, comments: list[str], worklogs: list[str], attachments: list[str]) -> str:
         """
         Converts an enriched Jira issue into a text block for embedding.
         """
@@ -260,5 +268,20 @@ class Retriever:
                 lines.append(
                     f"- {sub['key']}: {sub['summary']} (Status: {sub['status']})"
                 )
+
+        # Add comments
+        if comments:
+            lines.append("\nComments:")
+            lines.extend(comments)
+
+        # Add worklogs
+        if worklogs:
+            lines.append("\nWorklogs:")
+            lines.extend(worklogs)
+
+        # Add attachments
+        if attachments:
+            lines.append("\nAttachments:")
+            lines.extend(attachments)
 
         return "\n".join(lines)
