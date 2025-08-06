@@ -43,7 +43,7 @@ class JiraAdapter:
         """
         jql_query = f'project = "{self.project_key}" AND worklogAuthor = "{user_email}"'
         try:
-            issues = self.jira.jql(jql_query, fields="summary,worklog")
+            issues = self.jira.enhanced_jql(jql_query, fields="summary,worklog")
             total_time_spent_seconds = 0
             for issue in issues.get('issues', []):
                 for worklog in issue['fields']['worklog']['worklogs']:
@@ -62,7 +62,7 @@ class JiraAdapter:
         """
         jql_query = f'assignee = "{user_email}" ORDER BY updated DESC'
         try:
-            issues = self.jira.jql(jql_query, fields="summary,status")
+            issues = self.jira.enhanced_jql(jql_query, fields="summary,status")
             if not issues.get('issues'):
                 return f"No tickets found for user {user_email}."
 
@@ -81,7 +81,7 @@ class JiraAdapter:
         max_results = 50
 
         while True:
-            issues = self.jira.jql(jql, start=start_at, limit=max_results)
+            issues = self.jira.enhanced_jql(jql, start=start_at, limit=max_results)
             if not issues.get('issues'):
                 break
 
@@ -134,7 +134,7 @@ class JiraAdapter:
         """
         jql_query = f'project = "{self.project_key}" AND assignee = "{assignee_email}"'
         try:
-            issues = self.jira.jql(jql_query)
+            issues = self.jira.enhanced_jql(jql_query)
             total = issues.get('total', 0)
             return f"User {assignee_email} has {total} tickets assigned."
         except Exception as e:
@@ -157,7 +157,7 @@ class JiraAdapter:
         """
         jql_query = f'project = "{self.project_key}" AND status = "{status}"'
         try:
-            issues = self.jira.jql(jql_query)
+            issues = self.jira.enhanced_jql(jql_query)
             total = issues.get('total', 0)
             return f"There are {total} tickets in '{status}' status."
         except Exception as e:
@@ -169,7 +169,7 @@ class JiraAdapter:
         """
         jql_query = f'project = "{self.project_key}" AND updated <= -{hours}h'
         try:
-            issues = self.jira.jql(jql_query, fields="summary,status,updated")
+            issues = self.jira.enhanced_jql(jql_query, fields="summary,status,updated")
             if not issues.get('issues'):
                 return f"No tickets found that have not been updated in the last {hours} hours."
 
@@ -187,7 +187,7 @@ class JiraAdapter:
         """
         jql_query = f'project = "{self.project_key}" AND assignee = "{user_email}" ORDER BY updated DESC'
         try:
-            issues = self.jira.jql(jql_query, fields="summary")
+            issues = self.jira.enhanced_jql(jql_query, fields="summary")
             updated_by_others = []
             for issue in issues.get('issues', []):
                 comments = self.get_issue_comments(issue['key'])
@@ -210,7 +210,7 @@ class JiraAdapter:
         """
         jql_query = f'project = "{self.project_key}" AND due >= now() AND due <= "{days}d"'
         try:
-            issues = self.jira.jql(jql_query, fields="summary,status,duedate")
+            issues = self.jira.enhanced_jql(jql_query, fields="summary,status,duedate")
             if not issues.get('issues'):
                 return f"No tickets found with deadlines in the next {days} days."
 
@@ -228,7 +228,7 @@ class JiraAdapter:
         """
         jql_query = f'project = "{self.project_key}" AND status changed BEFORE "-{days}d"'
         try:
-            issues = self.jira.jql(jql_query, fields="summary,status,statuscategorychangedate")
+            issues = self.jira.enhanced_jql(jql_query, fields="summary,status,statuscategorychangedate")
             if not issues.get('issues'):
                 return f"No tickets found that have been stagnant for the last {days} days."
 
