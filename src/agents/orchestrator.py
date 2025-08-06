@@ -131,7 +131,8 @@ class Orchestrator:
                 days = int(match.group(1))
                 result = get_tickets_with_approaching_deadlines(self.jira_adapter, days)
             else:
-                result = "Could not extract the number of days from the query."
+                # Assume a default of 7 days if not specified
+                result = get_tickets_with_approaching_deadlines(self.jira_adapter, 7)
 
         elif intent == "GET_TICKETS_STAGNANT_IN_STATUS":
             match = re.search(r'(\d+)\s+days', query)
