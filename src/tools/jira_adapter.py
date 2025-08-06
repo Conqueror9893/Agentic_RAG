@@ -142,7 +142,8 @@ class JiraAdapter:
         jql_query = f'project = "{self.project_key}" AND status = "{status}"'
         try:
             issues = self.jira.jql(jql_query)
-            return f"There are {issues['total']} tickets in '{status}' status."
+            total = issues.get('total', 0)
+            return f"There are {total} tickets in '{status}' status."
         except Exception as e:
             return f"Error fetching ticket count for status '{status}': {e}"
 

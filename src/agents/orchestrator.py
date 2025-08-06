@@ -67,7 +67,7 @@ class Orchestrator:
         query = state['original_query']
         documents = state.get('retrieved_documents', []) # Use .get for safety
         generated_answer = state['generated_answer']
-        is_faithful = self.evaluator.evaluate(query, documents, generated_answer)
+        is_faithful = self.evaluator.evaluate(query, [doc.page_content for doc in documents], generated_answer)
 
         final_answer = generated_answer if is_faithful else "I cannot provide a faithful answer based on the retrieved documents."
         return {"final_answer": final_answer, "is_answer_faithful": is_faithful}
