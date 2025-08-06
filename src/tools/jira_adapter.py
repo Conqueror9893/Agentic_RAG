@@ -76,8 +76,23 @@ class JiraAdapter:
 
     def get_issues_in_project(self) -> list[Dict[str, Any]]:
         jql = f'project = {self.project_key}'
-        issues = self.jira.jql(jql)['issues']
-        return [self._enrich_issue(issue['key']) for issue in issues]
+        all_issues = []
+        start_at = 0
+        max_results = 50
+
+        while True:
+            issues = self.jira.jql(jql, start=start_at, limit=max_results)
+            if not issues.get('issues'):
+                break
+
+            all_issues.extend(issues['issues'])
+
+            if len(issues['issues']) < max_results:
+                break
+
+            start_at += max_results
+
+        return [self._enrich_issue(issue['key']) for issue in all_issues]
 
     def _enrich_issue(self, issue_key: str) -> Dict[str, Any]:
         issue = self.jira.issue(issue_key)
