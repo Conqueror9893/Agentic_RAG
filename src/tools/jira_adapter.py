@@ -120,7 +120,8 @@ class JiraAdapter:
         jql_query = f'project = "{self.project_key}" AND assignee = "{assignee_email}"'
         try:
             issues = self.jira.jql(jql_query)
-            return f"User {assignee_email} has {issues['total']} tickets assigned."
+            total = issues.get('total', 0)
+            return f"User {assignee_email} has {total} tickets assigned."
         except Exception as e:
             return f"Error fetching tickets for user '{assignee_email}': {e}"
 
