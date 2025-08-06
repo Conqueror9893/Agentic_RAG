@@ -72,6 +72,12 @@ class Orchestrator:
         final_answer = generated_answer if is_faithful else "I cannot provide a faithful answer based on the retrieved documents."
         return {"final_answer": final_answer, "is_answer_faithful": is_faithful}
 
+    def final_answer_node(self, state: AgentState) -> dict:
+        """Node that sets the final answer without evaluation."""
+        print("---CALLING FINAL ANSWER NODE---")
+        generated_answer = state['generated_answer']
+        return {"final_answer": generated_answer}
+
     def tool_executor_node(self, state: AgentState) -> dict:
         """Node that executes the appropriate Jira tool based on the intent."""
         print("---CALLING TOOL EXECUTOR---")
@@ -153,6 +159,7 @@ class Orchestrator:
         workflow.add_node("tool_executor", self.tool_executor_node)
         workflow.add_node("generator", self.generator_node)
         workflow.add_node("evaluator", self.evaluator_node)
+        workflow.add_node("final_answer", self.final_answer_node)
 
         workflow.set_entry_point("intent_classifier")
 
@@ -175,11 +182,27 @@ class Orchestrator:
             }
         )
 
+        def route_after_generator(state):
+            intent = state['intent']
+            if intent == 'KNOWLEDGE_QUERY':
+                return 'evaluator'
+            else:
+                return 'final_answer'
+
+        workflow.add_conditional_edges(
+            "generator",
+            route_after_generator,
+            {
+                "evaluator": "evaluator",
+                "final_answer": "final_answer",
+            }
+        )
+
         workflow.add_edge("rephraser", "retriever")
         workflow.add_edge("retriever", "generator")
         workflow.add_edge("tool_executor", "generator")
-        workflow.add_edge("generator", "evaluator")
         workflow.add_edge("evaluator", END)
+        workflow.add_edge("final_answer", END)
 
         return workflow.compile()
 
