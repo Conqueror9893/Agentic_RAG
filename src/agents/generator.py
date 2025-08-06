@@ -29,7 +29,8 @@ class Generator:
         context = "\n\n".join(documents)
 
         prompt_template = (
-            "You are a helpful assistant. Your task is to answer the user's query based *only* on the provided context.\n"
+            "You are a helpful assistant. Your task is to answer the user's query based on the provided context.\n"
+            "If the context is a direct statement, present it to the user in a clear and concise way.\n"
             "If the context does not contain the answer, state that you don't have enough information.\n\n"
             "Here is the context:\n"
             "---CONTEXT---\n"
