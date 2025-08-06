@@ -86,12 +86,27 @@ class Orchestrator:
         result = ""
 
         if intent == "GET_TICKETS_BY_ASSIGNEE":
-            match = re.search(r'[\w\.\-]+@[\w\.\-]+', query)
-            if match:
-                email = match.group(0)
+            email_match = re.search(r'[\w\.\-]+@[\w\.\-]+', query)
+            if email_match:
+                email = email_match.group(0)
                 result = get_tickets_by_assignee(self.jira_adapter, email)
             else:
-                result = "Could not extract email from the query."
+                # Try to extract a name
+                name_match = re.search(r'my name is ([\w\s]+)', query, re.IGNORECASE)
+                if not name_match:
+                    name_match = re.search(r'under my name, ([\w\s]+)', query, re.IGNORECASE)
+                if not name_match:
+                    name_match = re.search(r'name, ([\w\s]+)', query, re.IGNORECASE)
+
+                if name_match:
+                    name = name_match.group(1).strip()
+                    email = self.jira_adapter.get_user_by_name(name)
+                    if email:
+                        result = get_tickets_by_assignee(self.jira_adapter, email)
+                    else:
+                        result = f"Could not find a user with the name '{name}'."
+                else:
+                    result = "Could not extract email or name from the query."
 
         elif intent == "GET_TICKET_STATUS":
             match = re.search(r'([A-Z]+-\d+)', query)

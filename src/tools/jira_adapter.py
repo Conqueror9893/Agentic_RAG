@@ -255,3 +255,16 @@ class JiraAdapter:
             return [f"{attachment['filename']} ({attachment['size']} bytes)" for attachment in attachments]
         except Exception as e:
             return [f"Error fetching attachments for issue '{issue_key}': {e}"]
+
+    def get_user_by_name(self, display_name: str) -> str:
+        """
+        Retrieves a user's email address by their display name.
+        """
+        try:
+            users = self.jira.users_search(query=display_name)
+            for user in users:
+                if user['displayName'] == display_name:
+                    return user['emailAddress']
+            return None
+        except Exception as e:
+            return f"Error fetching user '{display_name}': {e}"
