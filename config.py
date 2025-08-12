@@ -40,9 +40,10 @@ CHROMA_COLLECTION_NAME = "rag_agentic_system"
 # ---------------------
 # Outlook Adaptor Configuration
 # ---------------------
-# To use the Outlook adaptor, you need to register an application in Azure Active Directory.
-# See src/adaptors/README.md for instructions on how to get these values.
-OUTLOOK_CLIENT_ID = os.getenv("OUTLOOK_CLIENT_ID", "fc679968-67b3-431d-ada5-369da5c87365")
-OUTLOOK_TENANT_ID = os.getenv("OUTLOOK_TENANT_ID", "3c143560-cb2f-4323-bb1e-977a81ee5d9e")
-# The client secret is needed for non-interactive authentication flows (not used by default).
-OUTLOOK_CLIENT_SECRET = os.getenv("j7~8Q~rVc9Ub-7at8FjVxqdzwcAYJsHq56TeTbGq")
+# To use the Outlook adaptor in a headless environment, you need to register an application
+# in Azure Active Directory and grant it Application permissions.
+# See src/adaptors/README.md for detailed instructions.
+OUTLOOK_CLIENT_ID = os.getenv("OUTLOOK_CLIENT_ID")
+OUTLOOK_TENANT_ID = os.getenv("OUTLOOK_TENANT_ID")
+OUTLOOK_CLIENT_SECRET = os.getenv("OUTLOOK_CLIENT_SECRET")
+OUTLOOK_USER_PRINCIPAL_NAME = os.getenv("OUTLOOK_USER_PRINCIPAL_NAME")
