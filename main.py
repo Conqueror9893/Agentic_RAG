@@ -1,49 +1,129 @@
+# from src.agents.orchestrator import Orchestrator
+# from src.agents.retriever import Retriever
+# from src.agents.generator import Generator
+# from src.agents.rephraser import Rephraser
+# from src.agents.evaluator import Evaluator
+# from src.tools.vector_store import get_vector_store
+# from src.tools.jira_loader import JiraLoader
+# from src.tools.jira_adapter import JiraAdapter
+# from config import JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN
+# import os
+
+# def setup_and_run(query: str):
+#     """
+#     Sets up the RAG system, configures the Jira adapter, and runs the query.
+#     """
+#     print("--- 1. CONFIGURATION AND SETUP ---")
+#     print("Initializing vector store...")
+#     vector_store = get_vector_store()
+
+#     print("\n--- 2. ADAPTER AND AGENT INITIALIZATION ---")
+
+#     # Initialize JiraAdapter if credentials are available
+#     jira_adapter = None
+#     if all([JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN]):
+#         try:
+#             jira_loader = JiraLoader()
+#             jira_adapter = JiraAdapter(jira_loader, JIRA_API_TOKEN, JIRA_USERNAME)
+#             print("JiraAdapter initialized successfully.")
+#         except ValueError as e:
+#             print(f"Could not initialize JiraAdapter: {e}")
+#             # If Jira is required, you might want to exit here.
+#             # For this example, we'll continue without the Jira adapter.
+#     else:
+#         print("Jira credentials not found in .env file. Jira-related queries will not work.")
+
+#     # Initialize agents
+#     rephraser_agent = Rephraser()
+#     retriever_agent = Retriever(vector_store=vector_store, jira_adapter=jira_adapter)
+#     generator_agent = Generator()
+#     evaluator_agent = Evaluator()
+
+#     # Initialize orchestrator
+#     orchestrator = Orchestrator(
+#         rephraser=rephraser_agent,
+#         retriever=retriever_agent,
+#         generator=generator_agent,
+#         evaluator=evaluator_agent
+#     )
+
+#     print("\n--- 3. RUNNING THE AGENTIC RAG WORKFLOW ---")
+#     result_state = orchestrator.run(query)
+
+#     print("\n--- 4. WORKFLOW FINISHED ---")
+#     final_node_state = result_state.get('evaluator', {})
+#     final_answer = final_node_state.get('final_answer')
+
+#     if final_answer:
+#         print("\nFinal Answer:")
+#         print(final_answer)
+#     else:
+#         print("\nCould not retrieve a final answer.")
+#         print("Final state:", result_state)
+
+# # if __name__ == "__main__":
+# #     # Example query. Replace with your own.
+# #     # This query will trigger the JiraAdapter if it's configured.
+# #     user_query = "what tickets are being worked upon by test@example.com in JIRA"
+
+# #     # You can also ask non-Jira questions if you have other data sources,
+# #     # but this example is focused on the Jira integration.
+# #     # user_query = "What is LangGraph?"
+
+# #     if not user_query:
+# #         print("Please set a user_query in main.py")
+# #     else:
+# #         setup_and_run(user_query)
+
+
+from dotenv import load_dotenv
+import os
+
 from src.agents.orchestrator import Orchestrator
 from src.agents.retriever import Retriever
 from src.agents.generator import Generator
 from src.agents.rephraser import Rephraser
 from src.agents.evaluator import Evaluator
-from src.tools.file_loader import load_documents
-from src.tools.vector_store import get_vector_store, add_documents_to_store
+from src.tools.vector_store import get_vector_store
 from src.tools.jira_loader import JiraLoader
+from src.tools.jira_adapter import JiraAdapter
 from config import JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN
-import os
+
 
 def setup_and_run(query: str):
     """
-    Sets up the RAG system, ingests data, and runs the query using Ollama and sentence-transformers.
+    Sets up the RAG system, configures the Jira adapter, and runs the query.
     """
-    print("--- 1. CONFIGURATION AND SETUP ---")
-    print("Using local Ollama and sentence-transformers setup.")
-
-    print("\n--- 2. DOCUMENT INGESTION ---")
-    documents = load_documents("./data")
-    if not documents:
-        print("No documents found in the './data' directory. Please add some .txt files and try again.")
-        return
-
+    print("\n\n--- 1. CONFIGURATION AND SETUP ---")
+    print("Initializing vector store...")
     vector_store = get_vector_store()
-    if documents:
-        add_documents_to_store(vector_store, documents)
 
-    print("\n--- 3. AGENT AND ORCHESTRATOR INITIALIZATION ---")
+    print("\n--- 2. ADAPTER AND AGENT INITIALIZATION ---")
 
-    # Initialize JiraLoader if credentials are available
-    jira_loader = None
+    # Initialize JiraAdapter if credentials are available
+    jira_adapter = None
     if all([JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN]):
         try:
             jira_loader = JiraLoader()
-            print("JiraLoader initialized successfully.")
+            jira_adapter = JiraAdapter(
+            jira_loader=JIRA_URL,   # 👈 This should be the Jira URL string
+            api_token=JIRA_API_TOKEN,
+            email=JIRA_USERNAME,
+            project_key="PSA"
+            )
+            print("JiraAdapter initialized successfully.")
         except ValueError as e:
-            print(f"Could not initialize JiraLoader: {e}")
+            print(f"Could not initialize JiraAdapter: {e}")
     else:
-        print("Jira credentials not found in .env file. Skipping JiraLoader initialization.")
+        print("Jira credentials not found in .env file. Jira-related queries will be skipped.")
 
+    # Initialize agents
     rephraser_agent = Rephraser()
-    retriever_agent = Retriever(vector_store=vector_store, jira_loader=jira_loader)
+    retriever_agent = Retriever(vector_store=vector_store, jira_adapter=jira_adapter)
     generator_agent = Generator()
     evaluator_agent = Evaluator()
 
+    # Initialize orchestrator
     orchestrator = Orchestrator(
         rephraser=rephraser_agent,
         retriever=retriever_agent,
@@ -51,38 +131,30 @@ def setup_and_run(query: str):
         evaluator=evaluator_agent
     )
 
-    print("\n--- 4. RUNNING THE AGENTIC RAG WORKFLOW ---")
+    print("\n--- 3. RUNNING THE AGENTIC RAG WORKFLOW ---")
     result_state = orchestrator.run(query)
 
-    print("\n--- 5. WORKFLOW FINISHED ---")
-    # The final state is nested under the last node that ran
+    print("\n--- 4. WORKFLOW FINISHED ---")
     final_node_state = result_state.get('evaluator', {})
     final_answer = final_node_state.get('final_answer')
 
     if final_answer:
-        print("\nFinal Answer:")
+        print("\n?? Final Answer:")
         print(final_answer)
     else:
-        print("\nCould not retrieve a final answer.")
+        print("\n? Could not retrieve a final answer.")
         print("Final state:", result_state)
 
 
 if __name__ == "__main__":
-    # Ensure the data directory and a sample file exist
-    if not os.path.exists("./data"):
-        os.makedirs("./data")
-    if not os.path.exists("./data/sample.txt"):
-        with open("./data/sample.txt", "w") as f:
-            f.write("The capital of France is Paris. The Eiffel Tower is a famous landmark in Paris. The currency of Japan is the Yen.")
+    load_dotenv()
 
-    # Get user input
-    # user_query = input("Please enter your query: ")
+    print("Welcome to the Agentic RAG Assistant! ??")
+    print("Type your question below. Type 'exit' to quit.\n")
 
-    # --- Test a regular query ---
-    # setup_and_run("What is the capital of France?")
-
-    # --- Test a JIRA query ---
-    # Note: To test this, you need to have a .env file with your JIRA credentials
-    # and replace the placeholder values in the query below.
-    jira_query = "what tickets are being worked upon by test@example.com in JIRA"
-    setup_and_run(jira_query)
+    while True:
+        user_query = input("?? You: ")
+        if user_query.lower() in ["exit", "quit"]:
+            print("Goodbye! ??")
+            break
+        setup_and_run(user_query)

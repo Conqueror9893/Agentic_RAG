@@ -24,6 +24,9 @@ class SentenceTransformerEmbeddings:
         print(f"Embedding query with sentence-transformer model...")
         embedding = self.model.encode(text, convert_to_tensor=False).tolist()
         return embedding
+    def __call__(self, texts: list[str]) -> list[list[float]]:
+        """Allows the instance to be called like a function (required by Chroma)."""
+        return self.embed_documents(texts)
 
 def get_vector_store(collection_name: str = "rag_agentic_system", persist_directory: str = "./chroma_db"):
     """

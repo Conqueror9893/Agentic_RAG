@@ -1,7 +1,7 @@
 import os
 from atlassian import Jira
 from config import JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN
-
+from typing import Dict, Any
 class JiraLoader:
     """
     A tool for interacting with Jira, allowing for fetching project details, issue statuses,
@@ -71,29 +71,37 @@ class JiraLoader:
             return f"Tickets for {user_email}:\n" + "\n".join(ticket_list)
         except Exception as e:
             return f"Error fetching tickets for user '{user_email}': {e}"
+    
+    def get_issues_in_project(self, project_key: str) -> list[Dict[str, Any]]:
+        jql = f'project = {project_key}'
+        issues = self.jira.jql(jql)['issues']
+        return [self._enrich_issue(issue['key']) for issue in issues]
 
-if __name__ == '__main__':
-    # Example usage (requires .env file with Jira credentials)
-    # Note: For this to run, you need to have a .env file in the root of the project
-    # with your JIRA_URL, JIRA_USERNAME, and JIRA_API_TOKEN.
-    try:
-        jira_loader = JiraLoader()
-        # Replace with a real project key and user email for testing
-        project_key = "PROJ"
-        user_email = "test@example.com"
+    def _enrich_issue(self, issue_key: str) -> Dict[str, Any]:
+        issue = self.jira.issue(issue_key)
 
-        print("--- Testing get_project_status ---")
-        # print(jira_loader.get_project_status(project_key))
+        enriched = {
+            "key": issue["key"],
+            "summary": issue["fields"].get("summary"),
+            "description": issue["fields"].get("description"),
+            "status": issue["fields"].get("status", {}).get("name"),
+            "assignee": issue["fields"].get("assignee", {}).get("emailAddress"),
+            "reporter": issue["fields"].get("reporter", {}).get("emailAddress"),
+            "created": issue["fields"].get("created"),
+            "updated": issue["fields"].get("updated"),
+            "duedate": issue["fields"].get("duedate"),
+            "labels": issue["fields"].get("labels", []),
+            "priority": issue["fields"].get("priority", {}).get("name"),
+            "issuetype": issue["fields"].get("issuetype", {}).get("name"),
+            "subtasks": [
+                {
+                    "key": sub["key"],
+                    "summary": sub["fields"]["summary"],
+                    "status": sub["fields"]["status"]["name"]
+                }
+                for sub in issue["fields"].get("subtasks", [])
+            ],
+        }
 
-        print("\n--- Testing get_user_worklogs ---")
-        # print(jira_loader.get_user_worklogs(project_key, user_email))
+        return enriched
 
-        print("\n--- Testing get_user_tickets ---")
-        # print(jira_loader.get_user_tickets(user_email))
-
-        print("\nNOTE: Live tests are commented out. Uncomment and replace placeholders to test.")
-
-    except ValueError as e:
-        print(e)
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
