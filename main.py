@@ -25,10 +25,22 @@ def setup_and_run(query: str, source: str = "file", max_emails: int = 10):
             print("No documents found in the './data' directory. Please add some files and try again.")
             return
     elif source == "outlook":
-        if not config.OUTLOOK_CLIENT_ID or not config.OUTLOOK_TENANT_ID:
-            print("Outlook credentials not found in config.py. Please set them up.")
+        required_configs = [
+            config.OUTLOOK_CLIENT_ID,
+            config.OUTLOOK_CLIENT_SECRET,
+            config.OUTLOOK_TENANT_ID,
+            config.OUTLOOK_USER_PRINCIPAL_NAME
+        ]
+        if not all(required_configs):
+            print("Outlook credentials not fully configured in config.py. Please set them up.")
             return
-        outlook_adaptor = OutlookAdaptor(client_id=config.OUTLOOK_CLIENT_ID, tenant_id=config.OUTLOOK_TENANT_ID)
+
+        outlook_adaptor = OutlookAdaptor(
+            client_id=config.OUTLOOK_CLIENT_ID,
+            client_secret=config.OUTLOOK_CLIENT_SECRET,
+            tenant_id=config.OUTLOOK_TENANT_ID,
+            user_principal_name=config.OUTLOOK_USER_PRINCIPAL_NAME
+        )
         documents = outlook_adaptor.load_documents(max_emails=max_emails)
         if not documents:
             print("No documents loaded from Outlook.")
