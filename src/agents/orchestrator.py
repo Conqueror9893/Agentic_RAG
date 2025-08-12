@@ -18,21 +18,20 @@ class Orchestrator:
         self.workflow = self._build_workflow()
 
     def rephraser_node(self, state: AgentState) -> dict:
-        """Node that calls the Rephraser agent."""
         print("---CALLING REPHRASER---")
         query = state['original_query']
         rephrased_queries = self.rephraser.rephrase(query)
         return {"rephrased_queries": rephrased_queries}
 
     def retriever_node(self, state: AgentState) -> dict:
-        """Node that calls the Retriever agent."""
         print("---CALLING RETRIEVER---")
         queries = state['rephrased_queries']
-        documents = self.retriever.retrieve(queries)
+        github_repo_url = state.get("github_repo_url", None)
+        print(f"DEBUG: Running with GitHub repo URL → {github_repo_url}")
+        documents = self.retriever.retrieve(queries, k=2, github_repo_url=github_repo_url)
         return {"retrieved_documents": documents}
 
     def generator_node(self, state: AgentState) -> dict:
-        """Node that calls the Generator agent."""
         print("---CALLING GENERATOR---")
         query = state['original_query']
         documents = state['retrieved_documents']
@@ -40,78 +39,39 @@ class Orchestrator:
         return {"generated_answer": generated_answer}
 
     def evaluator_node(self, state: AgentState) -> dict:
-        """Node that calls the Evaluator agent."""
         print("---CALLING EVALUATOR---")
         query = state['original_query']
         documents = state['retrieved_documents']
         generated_answer = state['generated_answer']
         is_faithful = self.evaluator.evaluate(query, documents, generated_answer)
-
         final_answer = generated_answer if is_faithful else "I cannot provide a faithful answer based on the retrieved documents."
         return {"final_answer": final_answer, "is_answer_faithful": is_faithful}
 
     def _build_workflow(self):
-        """Builds the LangGraph workflow for the agentic RAG system."""
         workflow = StateGraph(AgentState)
-
         workflow.add_node("rephraser", self.rephraser_node)
         workflow.add_node("retriever", self.retriever_node)
         workflow.add_node("generator", self.generator_node)
         workflow.add_node("evaluator", self.evaluator_node)
-
         workflow.set_entry_point("rephraser")
         workflow.add_edge("rephraser", "retriever")
         workflow.add_edge("retriever", "generator")
         workflow.add_edge("generator", "evaluator")
         workflow.add_edge("evaluator", END)
-
         return workflow.compile()
 
-    def run(self, query: str):
-        """Runs the agentic RAG system with the given query."""
-        initial_state = {"original_query": query}
+    def run(self, query: str, github_repo_url: str = ""):
+        """
+        Runs the agentic RAG system with the given query and optional GitHub repo context.
+        """
+        print(f"DEBUG: Running with GitHub repo URL → {github_repo_url}")
+        initial_state = {
+            "original_query": query,
+            "github_repo_url": github_repo_url if github_repo_url else None
+        }
+
         final_state = None
         for s in self.workflow.stream(initial_state):
             print(f"---STATE UPDATE---\n{s}\n---END STATE UPDATE---")
             final_state = s
         return final_state
-
-if __name__ == "__main__":
-    from src.tools.vector_store import get_vector_store, add_documents_to_store
-    from src.tools.file_loader import load_documents
-    import os
-
-    documents = load_documents("./data")
-    if not documents:
-        if not os.path.exists("./data"):
-            os.makedirs("./data")
-        with open("./data/sample.txt", "w") as f:
-            f.write("The capital of France is Paris.")
-        documents = load_documents("./data")
-
-    vector_store = get_vector_store()
-    if documents:
-        add_documents_to_store(vector_store, documents)
-
-    # Initialize agents
-    rephraser_agent = Rephraser()
-    retriever_agent = Retriever(vector_store=vector_store)
-    generator_agent = Generator()
-    evaluator_agent = Evaluator()
-
-    orchestrator = Orchestrator(
-        rephraser=rephraser_agent,
-        retriever=retriever_agent,
-        generator=generator_agent,
-        evaluator=evaluator_agent
-    )
-
-    result = orchestrator.run("What is the capital of France?")
-
-    print("\n---ORCHESTRATOR FINISHED---")
-    if result and 'final_answer' in result:
-        print("Final Answer:")
-        print(result['final_answer'])
-    else:
-        print("Could not retrieve a final answer.")
-        print("Final state:", result)

@@ -9,7 +9,7 @@ class Generator:
         self.model_name = model_name
         # Check if ollama is available
         try:
-            subprocess.run(["ollama", "--version"], check=True, capture_output=True)
+            subprocess.run(["ollama", "--version"], check=True, encoding="utf-8", capture_output=True)
         except (subprocess.CalledProcessError, FileNotFoundError):
             raise RuntimeError("Ollama is not available in the system's PATH. Please install it to use this Generator.")
 
@@ -55,6 +55,7 @@ class Generator:
                 command,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 check=True
             )
 

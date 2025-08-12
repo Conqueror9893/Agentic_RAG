@@ -5,9 +5,10 @@ from src.agents.rephraser import Rephraser
 from src.agents.evaluator import Evaluator
 from src.tools.file_loader import load_documents
 from src.tools.vector_store import get_vector_store, add_documents_to_store
+from src.tools.github_adapter import GitHubAdapter
 import os
 
-def setup_and_run(query: str):
+def setup_and_run(query: str, github_repo_url: str = ""):
     """
     Sets up the RAG system, ingests data, and runs the query using Ollama and sentence-transformers.
     """
@@ -25,8 +26,9 @@ def setup_and_run(query: str):
         add_documents_to_store(vector_store, documents)
 
     print("\n--- 3. AGENT AND ORCHESTRATOR INITIALIZATION ---")
+    github_adapter = GitHubAdapter()
     rephraser_agent = Rephraser()
-    retriever_agent = Retriever(vector_store=vector_store)
+    retriever_agent = Retriever(vector_store=vector_store, github_adapter=github_adapter)
     generator_agent = Generator()
     evaluator_agent = Evaluator()
 
@@ -38,10 +40,10 @@ def setup_and_run(query: str):
     )
 
     print("\n--- 4. RUNNING THE AGENTIC RAG WORKFLOW ---")
-    result_state = orchestrator.run(query)
+    print(f"DEBUG: Running with GitHub repo URL → {github_repo_url}")
+    result_state = orchestrator.run(query, github_repo_url=github_repo_url)
 
     print("\n--- 5. WORKFLOW FINISHED ---")
-    # The final state is nested under the last node that ran
     final_node_state = result_state.get('evaluator', {})
     final_answer = final_node_state.get('final_answer')
 
@@ -54,17 +56,19 @@ def setup_and_run(query: str):
 
 
 if __name__ == "__main__":
-    # Ensure the data directory and a sample file exist
     if not os.path.exists("./data"):
         os.makedirs("./data")
     if not os.path.exists("./data/sample.txt"):
         with open("./data/sample.txt", "w") as f:
             f.write("The capital of France is Paris. The Eiffel Tower is a famous landmark in Paris. The currency of Japan is the Yen.")
 
-    # Get user input
     user_query = input("Please enter your query: ")
+    github_repo = input("Enter a GitHub repo URL to include context from (or press Enter to skip): ")
+    print(f"DEBUG: Running with GitHub repo URL → {github_repo}")
 
     if user_query and user_query.strip():
-        setup_and_run(user_query)
+        clean_repo_url = github_repo.strip() or None
+        setup_and_run(user_query.strip(), github_repo_url=clean_repo_url)
+        # setup_and_run(user_query.strip(), github_repo.strip())
     else:
         print("No query entered. Exiting.")

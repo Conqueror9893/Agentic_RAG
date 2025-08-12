@@ -35,3 +35,20 @@ CHROMA_COLLECTION_NAME = "rag_agentic_system"
 # you'll need to provide the API key for that service.
 # For example, using Tavily Search:
 # TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+
+# ---------------------
+# GitHub Adapter Configuration
+# ---------------------
+# To allow agents to access GitHub repositories, provide a personal access token.
+# This is optional. The adapter will work without it, but will be subject to
+# stricter rate limits and cannot access private repositories.
+#
+# .env file example:
+# GITHUB_API_TOKEN="ghp_..."
+#
+GITHUB_API_TOKEN = os.getenv("GITHUB_API_TOKEN")
+
+# This flag controls whether the Retriever agent will attempt to fetch context
+# from a GitHub repository. Set to "true" to enable this feature.
+USE_GITHUB_CONTEXT = os.getenv("USE_GITHUB_CONTEXT", "false").lower() == "true"

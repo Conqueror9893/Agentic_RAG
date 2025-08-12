@@ -2,6 +2,7 @@ from langchain_community.vectorstores import Chroma
 import chromadb
 from sentence_transformers import SentenceTransformer
 
+VectorStore = Chroma
 class SentenceTransformerEmbeddings:
     """
     A custom embedding class that uses the sentence-transformers library.

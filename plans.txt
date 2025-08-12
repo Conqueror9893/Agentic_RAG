@@ -1,0 +1,20 @@
+pythonn 3.11
+
+conda create -n name python = ver
+
+
+tool is an helper for agents
+
+Suggestion	Reason
+Pagination for issues/commits	GitHub returns only 30 results by default
+Rate Limit Handling	To avoid hitting 403 if unauthenticated
+Retry with Backoff	Improves robustness on flaky networks
+Logging instead of print	Better for long-term maintenance
+
+
+current version
+1. token has read access, we provide repo url and it can answer questions about it.
+
+plans
+1. make it nonrepo specific, able to access all repos and answer for any
+2. check feasiblity if it should be able to commit code, should it?
