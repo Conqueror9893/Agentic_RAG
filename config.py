@@ -12,11 +12,11 @@ load_dotenv()
 # .env file example:
 # OPENAI_API_KEY="sk-..."
 #
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # It's a good practice to specify the model name in the config.
 # For this project, we'll start with gpt-4o, but you can change it to "gpt-3.5-turbo" or other models.
-OPENAI_MODEL_NAME = "gpt-4o"
+# OPENAI_MODEL_NAME = "gpt-4o"
 
 
 # ---------------------
@@ -42,7 +42,7 @@ CHROMA_COLLECTION_NAME = "rag_agentic_system"
 # ---------------------
 # To use the Outlook adaptor, you need to register an application in Azure Active Directory.
 # See src/adaptors/README.md for instructions on how to get these values.
-OUTLOOK_CLIENT_ID = os.getenv("OUTLOOK_CLIENT_ID", "your_client_id_here")
-OUTLOOK_TENANT_ID = os.getenv("OUTLOOK_TENANT_ID", "your_tenant_id_here")
+OUTLOOK_CLIENT_ID = os.getenv("OUTLOOK_CLIENT_ID", "fc679968-67b3-431d-ada5-369da5c87365")
+OUTLOOK_TENANT_ID = os.getenv("OUTLOOK_TENANT_ID", "3c143560-cb2f-4323-bb1e-977a81ee5d9e")
 # The client secret is needed for non-interactive authentication flows (not used by default).
-OUTLOOK_CLIENT_SECRET = os.getenv("OUTLOOK_CLIENT_SECRET")
+OUTLOOK_CLIENT_SECRET = os.getenv("j7~8Q~rVc9Ub-7at8FjVxqdzwcAYJsHq56TeTbGq")

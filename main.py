@@ -72,19 +72,23 @@ def setup_and_run(query: str, source: str = "file", max_emails: int = 10):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Agentic RAG Q&A System")
-    parser.add_argument("query", type=str, help="The query to ask the system.")
+    parser.add_argument("--query", type=str, help="The query to ask the system.")
     parser.add_argument("--source", type=str, default="file", choices=["file", "outlook"],
                         help="The data source to use for ingestion (default: file).")
     parser.add_argument("--max_emails", type=int, default=20,
                         help="The maximum number of emails to fetch from Outlook (default: 20).")
     args = parser.parse_args()
 
+    # Prompt for query if not provided as an argument
+    if not args.query or not args.query.strip():
+        args.query = input("Please enter your query: ").strip()
+
     # Ensure the data directory exists if using the file source
     if args.source == "file" and not os.path.exists("./data"):
         os.makedirs("./data")
         print("Created './data' directory. Please add documents to it.")
 
-    if args.query and args.query.strip():
+    if args.query:
         setup_and_run(args.query, source=args.source, max_emails=args.max_emails)
     else:
         print("No query entered. Exiting.")
