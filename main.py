@@ -1,23 +1,40 @@
+import os
+import argparse
+import config
 from src.agents.orchestrator import Orchestrator
 from src.agents.retriever import Retriever
 from src.agents.generator import Generator
 from src.agents.rephraser import Rephraser
 from src.agents.evaluator import Evaluator
 from src.tools.file_loader import load_documents
+from src.adaptors.outlook import OutlookAdaptor
 from src.tools.vector_store import get_vector_store, add_documents_to_store
-import os
 
-def setup_and_run(query: str):
+def setup_and_run(query: str, source: str = "file", max_emails: int = 10):
     """
-    Sets up the RAG system, ingests data, and runs the query using Ollama and sentence-transformers.
+    Sets up the RAG system, ingests data from the specified source, and runs the query.
     """
     print("--- 1. CONFIGURATION AND SETUP ---")
-    print("Using local Ollama and sentence-transformers setup.")
+    print(f"Using data source: {source}")
 
     print("\n--- 2. DOCUMENT INGESTION ---")
-    documents = load_documents("./data")
-    if not documents:
-        print("No documents found in the './data' directory. Please add some .txt files and try again.")
+    documents = []
+    if source == "file":
+        documents = load_documents("./data")
+        if not documents:
+            print("No documents found in the './data' directory. Please add some files and try again.")
+            return
+    elif source == "outlook":
+        if not config.OUTLOOK_CLIENT_ID or not config.OUTLOOK_TENANT_ID:
+            print("Outlook credentials not found in config.py. Please set them up.")
+            return
+        outlook_adaptor = OutlookAdaptor(client_id=config.OUTLOOK_CLIENT_ID, tenant_id=config.OUTLOOK_TENANT_ID)
+        documents = outlook_adaptor.load_documents(max_emails=max_emails)
+        if not documents:
+            print("No documents loaded from Outlook.")
+            return
+    else:
+        print(f"Unknown data source: {source}")
         return
 
     vector_store = get_vector_store()
@@ -54,17 +71,20 @@ def setup_and_run(query: str):
 
 
 if __name__ == "__main__":
-    # Ensure the data directory and a sample file exist
-    if not os.path.exists("./data"):
+    parser = argparse.ArgumentParser(description="Agentic RAG Q&A System")
+    parser.add_argument("query", type=str, help="The query to ask the system.")
+    parser.add_argument("--source", type=str, default="file", choices=["file", "outlook"],
+                        help="The data source to use for ingestion (default: file).")
+    parser.add_argument("--max_emails", type=int, default=20,
+                        help="The maximum number of emails to fetch from Outlook (default: 20).")
+    args = parser.parse_args()
+
+    # Ensure the data directory exists if using the file source
+    if args.source == "file" and not os.path.exists("./data"):
         os.makedirs("./data")
-    if not os.path.exists("./data/sample.txt"):
-        with open("./data/sample.txt", "w") as f:
-            f.write("The capital of France is Paris. The Eiffel Tower is a famous landmark in Paris. The currency of Japan is the Yen.")
+        print("Created './data' directory. Please add documents to it.")
 
-    # Get user input
-    user_query = input("Please enter your query: ")
-
-    if user_query and user_query.strip():
-        setup_and_run(user_query)
+    if args.query and args.query.strip():
+        setup_and_run(args.query, source=args.source, max_emails=args.max_emails)
     else:
         print("No query entered. Exiting.")

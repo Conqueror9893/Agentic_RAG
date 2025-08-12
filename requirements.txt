@@ -12,3 +12,7 @@ uvicorn
 pytest
 langchain-community
 sentence-transformers
+
+# Adaptors
+msgraph-sdk
+azure-identity

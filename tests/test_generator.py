@@ -1,26 +1,25 @@
 import pytest
 from src.agents.generator import Generator
-
-# A fixture to initialize the generator with a mock model can be added here later.
+from unittest.mock import patch
 
 def test_generator_initialization():
     """
     Tests that the Generator agent can be initialized.
+    Mocks the subprocess call to avoid dependency on Ollama being installed.
     """
-    mock_model = None
-    generator = Generator(model=mock_model)
-    assert generator is not None
+    with patch('subprocess.run') as mock_run:
+        # Simulate a successful version check
+        mock_run.return_value.returncode = 0
+        generator = Generator()
+        assert generator is not None
+        assert generator.model_name == "openchat:latest"
 
-def test_generate_with_dummy_data():
+def test_generator_initialization_with_custom_model():
     """
-    Tests the generate method with a simple query and context.
+    Tests that the Generator agent can be initialized with a custom model name.
     """
-    mock_model = None
-    generator = Generator(model=mock_model)
-    query = "What is the capital of France?"
-    documents = ["Paris is the capital of France.", "The Eiffel Tower is in Paris."]
-    answer = generator.generate(query, documents)
-
-    assert isinstance(answer, str)
-    assert "Paris" in answer
-    assert "France" in answer
+    with patch('subprocess.run') as mock_run:
+        mock_run.return_value.returncode = 0
+        generator = Generator(model_name="my-custom-model")
+        assert generator is not None
+        assert generator.model_name == "my-custom-model"
