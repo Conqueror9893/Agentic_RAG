@@ -151,5 +151,5 @@ cython_debug/
 .vscode/
 
 # Config
-# config.py
+config.py
 *.env
